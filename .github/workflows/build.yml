@@ -1,0 +1,71 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  xcode_16:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: 🔍 Xcode Select
+        run: |
+          XCODE_PATH=`mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' && kMDItemVersion == '16.*'" -onlyin /Applications | head -1`
+          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift test --enable-code-coverage --filter do_not_test
+      - name: Test
+        run: swift test --enable-code-coverage --skip-build
+      - name: Gather code coverage
+        run: xcrun llvm-cov export -format="lcov" .build/debug/TaskTimeoutPackageTests.xctest/Contents/MacOS/TaskTimeoutPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage_report.lcov
+
+  xcode_15_4:
+    runs-on: macos-14
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
+  linux_swift_5_10:
+    runs-on: ubuntu-latest
+    container: swift:5.10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
+  linux_swift_6_0:
+    runs-on: ubuntu-latest
+    container: swiftlang/swift:nightly-6.0-jammy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
