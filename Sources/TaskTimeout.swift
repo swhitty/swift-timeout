@@ -45,6 +45,7 @@ public func withThrowingTimeout<T>(
     seconds: TimeInterval,
     body: () async throws -> sending T
 ) async throws -> sending T {
+    // body never leaves isolation, casts are used to keep compiler happy.
     let transferringBody = { try await Transferring(body()) }
     typealias NonSendableClosure = () async throws -> Transferring<T>
     typealias SendableClosure = @Sendable () async throws -> Transferring<T>
