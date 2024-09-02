@@ -56,6 +56,21 @@ final class TaskTimeoutTests: XCTestCase {
         }
     }
 
+    func testSendable_ReturnsValue() async throws {
+        let sendable = TestActor()
+        let value = try await withThrowingTimeout(seconds: 1) {
+            sendable
+        }
+        XCTAssertTrue(value === sendable)
+    }
+
+    func testNonSendable_ReturnsValue() async throws {
+        let ns = try await withThrowingTimeout(seconds: 1) {
+            NonSendable("chips")
+        }
+        XCTAssertEqual(ns.value, "chips")
+    }
+
     func testActor_ReturnsValue() async throws {
         let val = try await TestActor().returningString("Fish")
         XCTAssertEqual(val, "Fish")
@@ -71,6 +86,14 @@ final class TaskTimeoutTests: XCTestCase {
         } catch {
             XCTAssertTrue(error is TimeoutError)
         }
+    }
+}
+
+public struct NonSendable<T> {
+    public var value: T
+
+    init(_ value: T) {
+        self.value = value
     }
 }
 
