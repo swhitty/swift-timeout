@@ -37,3 +37,4 @@ If the timeout expires before a value is returned the task is cancelled and `Tim
 TaskTimeout is primarily the work of [Simon Whitty](https://github.com/swhitty).
 
 ([Full list of contributors](https://github.com/swhitty/TaskTimeout/graphs/contributors))
+
