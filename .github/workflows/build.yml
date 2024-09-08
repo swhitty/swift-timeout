@@ -69,3 +69,17 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
+  linux_swift_6_1:
+    runs-on: ubuntu-latest
+    container: swiftlang/swift:nightly-jammy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
+
