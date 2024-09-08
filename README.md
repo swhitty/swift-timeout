@@ -22,7 +22,7 @@ To install using Swift Package Manager, add this to the `dependencies:` section 
 
 # Usage
 
-Usage is similar to using structured concurrency, provide a closure and a [`ContinousClock.Instant`](https://developer.apple.com/documentation/swift/continuousclock/instant) for when the child task must complete else `TimeoutError` is thrown:
+Usage is similar to using structured concurrency, provide a closure and a [`Instant`](https://developer.apple.com/documentation/swift/continuousclock/instant) for when the child task must complete else `TimeoutError` is thrown:
 
 ```swift
 import Timeout
