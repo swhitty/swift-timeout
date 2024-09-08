@@ -171,9 +171,7 @@ private func _withThrowingTimeout<T: Sendable>(
 }
 
 private struct Transferring<Value>: @unchecked Sendable {
-
     var value: Value
-
     init(_ value: Value) {
         self.value = value
     }
