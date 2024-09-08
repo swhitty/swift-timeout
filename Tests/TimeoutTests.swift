@@ -119,6 +119,24 @@ struct TimeoutTests {
             try await TestActor("Fish").returningValue(after: 0.1, before: .now)
         }
     }
+
+    @Test
+    func returnsValueWithClock_beforeDeadlineExpires() async throws {
+        #expect(
+            try await withThrowingTimeout(after: .now + .seconds(2), clock: ContinuousClock()) {
+                "Fish"
+            } == "Fish"
+        )
+    }
+
+    @Test
+    func throwsErrorWithClock_WhenDeadlineExpires() async {
+        await #expect(throws: TimeoutError.self) {
+            try await withThrowingTimeout(after: .now, clock: ContinuousClock()) {
+                try await Task.sleep(for: .seconds(2))
+            }
+        }
+    }
 }
 
 public struct NonSendable<T> {
