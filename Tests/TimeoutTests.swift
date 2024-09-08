@@ -90,6 +90,21 @@ struct TimeoutTests {
             }
         }
     }
+
+    @Test
+    func timeout_cancels() async {
+        let task = Task {
+            try await withThrowingTimeout(seconds: 1) {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+
+        task.cancel()
+
+        await #expect(throws: CancellationError.self) {
+            try await task.value
+        }
+    }
 }
 
 public struct NonSendable<T> {

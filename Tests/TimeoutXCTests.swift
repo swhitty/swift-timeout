@@ -91,6 +91,23 @@ final class TimeoutTests: XCTestCase {
             XCTAssertTrue(error is TimeoutError)
         }
     }
+
+    func testTimeout_Cancels() async {
+        let task = Task {
+            try await withThrowingTimeout(seconds: 1) {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Expected Error")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+    }
 }
 
 public struct NonSendable<T> {

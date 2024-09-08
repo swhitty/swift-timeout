@@ -56,7 +56,11 @@ public func withThrowingTimeout<T>(
             throw TimeoutError(timeout: seconds)
         }
 
-        let bodyResult = await bodyTask.result
+        let bodyResult = await withTaskCancellationHandler {
+            await bodyTask.result
+        } onCancel: {
+            bodyTask.cancel()
+        }
         timeoutTask.cancel()
         let timeoutResult = await timeoutTask.result
 
