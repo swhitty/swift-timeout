@@ -81,7 +81,7 @@ public func withThrowingTimeout<T>(
 private func _withThrowingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
     body: () async throws -> sending T,
-    timeout: @Sendable @escaping () async throws -> Void
+    timeout: @Sendable @escaping () async throws -> Never
 ) async throws -> Transferring<T> {
     try await withoutActuallyEscaping(body) { escapingBody in
         let bodyTask = Task {
@@ -155,7 +155,7 @@ public func withThrowingTimeout<T>(
 // Sendable
 private func _withThrowingTimeout<T: Sendable>(
     body: @Sendable @escaping () async throws -> T,
-    timeout: @Sendable @escaping () async throws -> Void
+    timeout: @Sendable @escaping () async throws -> Never
 ) async throws -> T {
     try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask {
@@ -163,7 +163,6 @@ private func _withThrowingTimeout<T: Sendable>(
         }
         group.addTask {
             try await timeout()
-            throw TimeoutError("expired")
         }
         let success = try await group.next()!
         group.cancelAll()
