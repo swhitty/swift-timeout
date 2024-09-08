@@ -38,6 +38,8 @@ final class TaskTimeoutTests: XCTestCase {
     func testMainActor_ReturnsValue() async throws {
         let val = try await withThrowingTimeout(seconds: 1) {
             MainActor.assertIsolated()
+            try await Task.sleep(nanoseconds: 1_000)
+            MainActor.assertIsolated()
             return "Fish"
         }
         XCTAssertEqual(val, "Fish")
@@ -48,7 +50,8 @@ final class TaskTimeoutTests: XCTestCase {
         do {
             try await withThrowingTimeout(seconds: 0.05) {
                 MainActor.assertIsolated()
-                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                defer { MainActor.assertIsolated() }
+                try await Task.sleep(nanoseconds: 60_000_000_000)
             }
             XCTFail("Expected Error")
         } catch {
@@ -72,13 +75,13 @@ final class TaskTimeoutTests: XCTestCase {
     }
 
     func testActor_ReturnsValue() async throws {
-        let val = try await TestActor().returningString("Fish")
+        let val = try await TestActor("Fish").returningValue()
         XCTAssertEqual(val, "Fish")
     }
 
     func testActorThrowsError_WhenTimeoutExpires() async {
         do {
-            _ = try await TestActor().returningString(
+            _ = try await TestActor().returningValue(
                 after: 60,
                 timeout: 0.05
             )
@@ -97,17 +100,23 @@ public struct NonSendable<T> {
     }
 }
 
-final actor TestActor {
+final actor TestActor<T: Sendable> {
 
-    func returningString(_ string: String = "Fish", after sleep: TimeInterval = 0, timeout: TimeInterval = 1) async throws -> String {
-        try await returningValue(string, after: sleep, timeout: timeout)
+    private var value: T
+
+    init(_ value: T) {
+        self.value = value
     }
 
-    func returningValue<T: Sendable>(_ value: T, after sleep: TimeInterval = 0, timeout: TimeInterval = 1) async throws -> T {
+    init() where T == String {
+        self.init("fish")
+    }
+
+    func returningValue(after sleep: TimeInterval = 0, timeout: TimeInterval = 1) async throws -> T {
         try await withThrowingTimeout(seconds: timeout) {
-            assertIsolated()
             try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
-            return value
+            self.assertIsolated()
+            return self.value
         }
     }
 }
