@@ -1,6 +1,6 @@
 //
-//  TaskTimeoutTests.swift
-//  TaskTimeout
+//  TimeoutTests.swift
+//  swift-timeout
 //
 //  Created by Simon Whitty on 31/08/2024.
 //  Copyright 2024 Simon Whitty
@@ -8,7 +8,7 @@
 //  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
-//  https://github.com/swhitty/TaskTimeout
+//  https://github.com/swhitty/swift-timeout
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,10 @@
 //  SOFTWARE.
 //
 
-import TaskTimeout
+import Timeout
 import XCTest
 
-final class TaskTimeoutTests: XCTestCase {
+final class TimeoutTests: XCTestCase {
 
     @MainActor
     func testMainActor_ReturnsValue() async throws {

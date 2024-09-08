@@ -3,25 +3,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "TaskTimeout",
+    name: "Timeout",
     platforms: [
         .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)
     ],
     products: [
         .library(
-            name: "TaskTimeout",
-            targets: ["TaskTimeout"]
+            name: "Timeout",
+            targets: ["Timeout"]
         )
     ],
     targets: [
         .target(
-            name: "TaskTimeout",
+            name: "Timeout",
             path: "Sources",
             swiftSettings: .upcomingFeatures
         ),
         .testTarget(
-            name: "TaskTimeoutTests",
-            dependencies: ["TaskTimeout"],
+            name: "TimeoutTests",
+            dependencies: ["Timeout"],
             path: "Tests",
             swiftSettings: .upcomingFeatures
         )
