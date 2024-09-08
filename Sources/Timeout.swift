@@ -99,17 +99,12 @@ private func _withThrowingTimeout<T>(
             bodyTask.cancel()
         }
         timeoutTask.cancel()
-        let timeoutResult = await timeoutTask.result
 
-        switch bodyResult {
-        case .success(let bodySuccess):
-            return bodySuccess
-        case .failure(let bodyError):
-            if case .failure(let timeoutError) = timeoutResult, timeoutError is TimeoutError {
-                throw timeoutError
-            } else {
-                throw bodyError
-            }
+        if case .failure(let timeoutError) = await timeoutTask.result,
+           timeoutError is TimeoutError {
+            throw timeoutError
+        } else {
+            return try bodyResult.get()
         }
     }
 }
