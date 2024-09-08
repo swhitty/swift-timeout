@@ -29,65 +29,66 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
+#if !canImport(Testing)
 import Timeout
-import Foundation
-import Testing
+import XCTest
 
-struct TimeoutTests {
+final class TimeoutTests: XCTestCase {
 
-    @Test @MainActor
-    func mainActor_ReturnsValue() async throws {
+    @MainActor
+    func testMainActor_ReturnsValue() async throws {
         let val = try await withThrowingTimeout(seconds: 1) {
             MainActor.assertIsolated()
             try await Task.sleep(nanoseconds: 1_000)
             MainActor.assertIsolated()
             return "Fish"
         }
-        #expect(val == "Fish")
+        XCTAssertEqual(val, "Fish")
     }
 
-    @Test
-    func mainActorThrowsError_WhenTimeoutExpires() async {
-        await #expect(throws: TimeoutError.self) { @MainActor in
+    @MainActor
+    func testMainActorThrowsError_WhenTimeoutExpires() async {
+        do {
             try await withThrowingTimeout(seconds: 0.05) {
                 MainActor.assertIsolated()
                 defer { MainActor.assertIsolated() }
                 try await Task.sleep(nanoseconds: 60_000_000_000)
             }
+            XCTFail("Expected Error")
+        } catch {
+            XCTAssertTrue(error is TimeoutError)
         }
     }
 
-    @Test
-    func sendable_ReturnsValue() async throws {
+    func testSendable_ReturnsValue() async throws {
         let sendable = TestActor()
         let value = try await withThrowingTimeout(seconds: 1) {
             sendable
         }
-        #expect(value === sendable)
+        XCTAssertTrue(value === sendable)
     }
 
-    @Test
-    func nonSendable_ReturnsValue() async throws {
+    func testNonSendable_ReturnsValue() async throws {
         let ns = try await withThrowingTimeout(seconds: 1) {
             NonSendable("chips")
         }
-        #expect(ns.value == "chips")
+        XCTAssertEqual(ns.value, "chips")
     }
 
-    @Test
-    func actor_ReturnsValue() async throws {
-        #expect(
-            try await TestActor("Fish").returningValue() == "Fish"
-        )
+    func testActor_ReturnsValue() async throws {
+        let val = try await TestActor("Fish").returningValue()
+        XCTAssertEqual(val, "Fish")
     }
 
-    @Test
-    func actorThrowsError_WhenTimeoutExpires() async {
-        await #expect(throws: TimeoutError.self) {
-            try await withThrowingTimeout(seconds: 0.05) {
-                try await TestActor().returningValue(after: 60, timeout: 0.05)
-            }
+    func testActorThrowsError_WhenTimeoutExpires() async {
+        do {
+            _ = try await TestActor().returningValue(
+                after: 60,
+                timeout: 0.05
+            )
+            XCTFail("Expected Error")
+        } catch {
+            XCTAssertTrue(error is TimeoutError)
         }
     }
 }
