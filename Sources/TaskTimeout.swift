@@ -45,41 +45,36 @@ public func withThrowingTimeout<T>(
     seconds: TimeInterval,
     body: () async throws -> sending T
 ) async throws -> sending T {
-    // body never leaves isolation, casts are used to keep compiler happy.
-    let transferringBody = { try await Transferring(body()) }
-    typealias NonSendableClosure = () async throws -> Transferring<T>
-    typealias SendableClosure = @Sendable () async throws -> Transferring<T>
-    return try await withoutActuallyEscaping(transferringBody) {
-        (_ fn: @escaping NonSendableClosure) async throws -> Transferring<T> in
-        let sendableFn = unsafeBitCast(fn, to: SendableClosure.self)
-        return try await _withThrowingTimeout(isolation: isolation, seconds: seconds, body: sendableFn)
-    }.value
-}
-
-// Sendable
-private func _withThrowingTimeout<T: Sendable>(
-    isolation: isolated (any Actor)? = #isolation,
-    seconds: TimeInterval,
-    body: @Sendable @escaping () async throws -> T
-) async throws -> T {
-    try await withThrowingTaskGroup(of: T.self, isolation: isolation) { group in
-        group.addTask {
-            try await body()
+    try await withoutActuallyEscaping(body) { escapingBody in
+        let bodyTask = Task {
+            defer { _ = isolation }
+            return try await Transferring(escapingBody())
         }
-        group.addTask {
+        let timeoutTask = Task {
+            defer { bodyTask.cancel() }
             try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             throw TimeoutError(timeout: seconds)
         }
-        let success = try await group.next()!
-        group.cancelAll()
-        return success
-    }
+
+        let bodyResult = await bodyTask.result
+        timeoutTask.cancel()
+        let timeoutResult = await timeoutTask.result
+
+        switch bodyResult {
+        case .success(let bodySuccess):
+            return bodySuccess
+        case .failure(let bodyError):
+            if case .failure(let timeoutError) = timeoutResult, timeoutError is TimeoutError {
+                throw timeoutError
+            } else {
+                throw bodyError
+            }
+        }
+    }.value
 }
 
 private struct Transferring<Value>: Sendable {
-
     nonisolated(unsafe) public var value: Value
-
     init(_ value: Value) {
         self.value = value
     }
