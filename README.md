@@ -40,7 +40,7 @@ let val = try await withThrowingTimeout(seconds: 2.0) {
 }
 ```
 
-When deadline is reached the task executing the closure is cancelled and `TimeoutError` is thrown.
+> Note: When the timeout expires the task executing the closure is cancelled and `TimeoutError` is thrown.
 
 # Credits
 
