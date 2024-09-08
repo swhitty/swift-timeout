@@ -108,6 +108,20 @@ final class TimeoutTests: XCTestCase {
             XCTAssertTrue(error is CancellationError)
         }
     }
+
+    func testReturnsValue_beforeDeadlineExpires() async throws {
+        let val = try await TestActor("Fish").returningValue(before: .now + .seconds(2))
+        XCTAssert(val == "Fish")
+    }
+
+    func testThrowsError_WhenDeadlineExpires() async {
+        do {
+            _ = try await TestActor("Fish").returningValue(after: 0.1, before: .now)
+            XCTFail("Expected Error")
+        } catch {
+            XCTAssertTrue(error is TimeoutError)
+        }
+    }
 }
 
 public struct NonSendable<T> {
@@ -134,6 +148,16 @@ final actor TestActor<T: Sendable> {
         try await withThrowingTimeout(seconds: timeout) {
             try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
             self.assertIsolated()
+            return self.value
+        }
+    }
+
+    func returningValue(after sleep: TimeInterval = 0, before instant: ContinuousClock.Instant) async throws -> T {
+        try await withThrowingTimeout(after: instant) {
+            try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
+            #if compiler(>=5.10)
+            self.assertIsolated()
+            #endif
             return self.value
         }
     }

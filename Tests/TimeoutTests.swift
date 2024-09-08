@@ -39,9 +39,9 @@ struct TimeoutTests {
     @Test @MainActor
     func mainActor_ReturnsValue() async throws {
         let val = try await withThrowingTimeout(seconds: 1) {
-            MainActor.assertIsolated()
+            MainActor.safeAssertIsolated()
             try await Task.sleep(nanoseconds: 1_000)
-            MainActor.assertIsolated()
+            MainActor.safeAssertIsolated()
             return "Fish"
         }
         #expect(val == "Fish")
@@ -51,8 +51,8 @@ struct TimeoutTests {
     func mainActorThrowsError_WhenTimeoutExpires() async {
         await #expect(throws: TimeoutError.self) { @MainActor in
             try await withThrowingTimeout(seconds: 0.05) {
-                MainActor.assertIsolated()
-                defer { MainActor.assertIsolated() }
+                MainActor.safeAssertIsolated()
+                defer { MainActor.safeAssertIsolated() }
                 try await Task.sleep(nanoseconds: 60_000_000_000)
             }
         }
@@ -105,6 +105,20 @@ struct TimeoutTests {
             try await task.value
         }
     }
+
+    @Test
+    func returnsValue_beforeDeadlineExpires() async throws {
+        #expect(
+            try await TestActor("Fish").returningValue(before: .now + .seconds(2)) == "Fish"
+        )
+    }
+
+    @Test
+    func throwsError_WhenDeadlineExpires() async {
+        await #expect(throws: TimeoutError.self) {
+            try await TestActor("Fish").returningValue(after: 0.1, before: .now)
+        }
+    }
 }
 
 public struct NonSendable<T> {
@@ -130,9 +144,33 @@ final actor TestActor<T: Sendable> {
     func returningValue(after sleep: TimeInterval = 0, timeout: TimeInterval = 1) async throws -> T {
         try await withThrowingTimeout(seconds: timeout) {
             try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
+            #if compiler(>=5.10)
             self.assertIsolated()
+            #endif
+            return self.value
+        }
+    }
+
+    func returningValue(after sleep: TimeInterval = 0, before instant: ContinuousClock.Instant) async throws -> T {
+        try await withThrowingTimeout(after: instant) {
+            try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
+            #if compiler(>=5.10)
+            self.assertIsolated()
+            #endif
             return self.value
         }
     }
 }
+
+extension MainActor {
+
+    static func safeAssertIsolated() {
+    #if compiler(>=5.10)
+        assertIsolated()
+    #else
+        precondition(Thread.isMainThread)
+    #endif
+    }
+}
+
 #endif

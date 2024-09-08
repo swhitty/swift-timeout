@@ -22,17 +22,25 @@ To install using Swift Package Manager, add this to the `dependencies:` section 
 
 # Usage
 
-Usage is similar to using structured concurrency:
+Usage is similar to using structured concurrency, provide a closure and a [`ContinousClock.Instant`](https://developer.apple.com/documentation/swift/continuousclock/instant) for when the child task is cancelled and `TimeoutError` is thrown:
 
 ```swift
 import Timeout
 
-let val = try await withThrowingTimeout(seconds: 1.5) {
+let val = try await withThrowingTimeout(after: .now + .seconds(2)) {
   try await perform()
 }
 ```
 
-If the timeout expires before a value is returned the task is cancelled and `TimeoutError` is thrown.
+`TimeInterval` can also be provided:
+
+```swift
+let val = try await withThrowingTimeout(seconds: 2.0) {
+  try await perform()
+}
+```
+
+When deadline is reached the task executing the closure is cancelled and `TimeoutError` is thrown.
 
 # Credits
 
