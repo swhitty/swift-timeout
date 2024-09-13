@@ -121,12 +121,8 @@ public func withThrowingTimeout<T>(
     body: () async throws -> T
 ) async throws -> T {
     let transferringBody = { try await Transferring(body()) }
-    typealias NonSendableClosure = () async throws -> Transferring<T>
-    typealias SendableClosure = @Sendable () async throws -> Transferring<T>
     return try await withoutActuallyEscaping(transferringBody) {
-        (_ fn: @escaping NonSendableClosure) async throws -> Transferring<T> in
-        let sendableFn = unsafeBitCast(fn, to: SendableClosure.self)
-        return try await _withThrowingTimeout(body: sendableFn) {
+        try await _withThrowingTimeout(body: $0) {
             try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             throw TimeoutError("Task timed out before completion. Timeout: \(seconds) seconds.")
         }
@@ -140,12 +136,8 @@ public func withThrowingTimeout<T>(
     body: () async throws -> T
 ) async throws -> T {
     let transferringBody = { try await Transferring(body()) }
-    typealias NonSendableClosure = () async throws -> Transferring<T>
-    typealias SendableClosure = @Sendable () async throws -> Transferring<T>
     return try await withoutActuallyEscaping(transferringBody) {
-        (_ fn: @escaping NonSendableClosure) async throws -> Transferring<T> in
-        let sendableFn = unsafeBitCast(fn, to: SendableClosure.self)
-        return try await _withThrowingTimeout(body: sendableFn) {
+        try await _withThrowingTimeout(body: $0) {
             try await Task.sleep(until: instant, tolerance: tolerance, clock: ContinuousClock())
             throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
         }
@@ -154,12 +146,13 @@ public func withThrowingTimeout<T>(
 
 // Sendable
 private func _withThrowingTimeout<T: Sendable>(
-    body: @Sendable @escaping () async throws -> T,
+    body: @escaping () async throws -> T,
     timeout: @Sendable @escaping () async throws -> Never
 ) async throws -> T {
-    try await withThrowingTaskGroup(of: T.self) { group in
+    let body = Transferring(body)
+    return try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask {
-            try await body()
+            try await body.value()
         }
         group.addTask {
             try await timeout()
