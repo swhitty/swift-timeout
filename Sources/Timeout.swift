@@ -135,10 +135,25 @@ public func withThrowingTimeout<T>(
     tolerance: ContinuousClock.Instant.Duration? = nil,
     body: () async throws -> T
 ) async throws -> T {
+    try await withThrowingTimeout(
+        after: instant,
+        tolerance: tolerance,
+        clock: ContinuousClock(),
+        body: body
+    )
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+public func withThrowingTimeout<T, C: Clock>(
+    after instant: C.Instant,
+    tolerance: C.Instant.Duration? = nil,
+    clock: C,
+    body: () async throws -> T
+) async throws -> T {
     let transferringBody = { try await Transferring(body()) }
     return try await withoutActuallyEscaping(transferringBody) {
         try await _withThrowingTimeout(body: $0) {
-            try await Task.sleep(until: instant, tolerance: tolerance, clock: ContinuousClock())
+            try await Task.sleep(until: instant, tolerance: tolerance, clock: clock)
             throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
         }
     }.value
