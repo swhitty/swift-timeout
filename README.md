@@ -1,9 +1,7 @@
 [![Build](https://github.com/swhitty/swift-timeout/actions/workflows/build.yml/badge.svg)](https://github.com/swhitty/swift-timeout/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/swhitty/swift-timeout/graphs/badge.svg)](https://codecov.io/gh/swhitty/swift-timeout)
-[![Platforms](https://img.shields.io/badge/platforms-iOS%20|%20Mac%20|%20tvOS%20|%20Linux%20|%20Windows-lightgray.svg)](https://github.com/swhitty/swift-timeout/blob/main/Package.swift)
-[![Swift 6.0](https://img.shields.io/badge/swift-5.10%20–%206.0-red.svg?style=flat)](https://developer.apple.com/swift)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
-[![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2Fswift-timeout%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/swhitty/swift-timeout)
+[![Swift 6.0](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2Fswift-timeout%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/swhitty/swift-timeout)
 
 # Introduction
 
