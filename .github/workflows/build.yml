@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  xcode_16:
+  xcode_16_3:
     runs-on: macos-15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +26,20 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_report.lcov
+
+  xcode_16_2:
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
 
   xcode_15_4:
     runs-on: macos-14
@@ -67,15 +81,48 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  linux_swift_6_0_musl:
+  linux_swift_6_1:
     runs-on: ubuntu-latest
-    container: swift:6.0.3
+    container: swift:6.1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Version
         run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
+  linux_swift_6_1_musl:
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: SDK List Pre
+        run: swift sdk list
       - name: Install SDK
-        run: swift sdk install https://download.swift.org/swift-6.0.3-release/static-sdk/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz --checksum 67f765e0030e661a7450f7e4877cfe008db4f57f177d5a08a6e26fd661cdd0bd
+        run: swift sdk install https://download.swift.org/swift-6.1-release/static-sdk/swift-6.1-RELEASE/swift-6.1-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz --checksum 111c6f7d280a651208b8c74c0521dd99365d785c1976a6e23162f55f65379ac6
+      - name: SDK List Post
+        run: swift sdk list
       - name: Build
         run: swift build --swift-sdk x86_64-swift-linux-musl
+
+  windows_swift_6_1:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Swift
+        uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.1.0"
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
