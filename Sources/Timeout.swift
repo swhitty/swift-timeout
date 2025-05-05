@@ -48,7 +48,7 @@ public func withThrowingTimeout<T>(
     try await _withThrowingTimeout(isolation: isolation, body: body) {
         try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
         throw TimeoutError("Task timed out before completion. Timeout: \(seconds) seconds.")
-    }.value
+    }
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
@@ -62,7 +62,7 @@ public func withThrowingTimeout<T, C: Clock>(
     try await _withThrowingTimeout(isolation: isolation, body: body) {
         try await Task.sleep(until: instant, tolerance: tolerance, clock: clock)
         throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
-    }.value
+    }
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
@@ -75,14 +75,14 @@ public func withThrowingTimeout<T>(
     try await _withThrowingTimeout(isolation: isolation, body: body) {
         try await Task.sleep(until: instant, tolerance: tolerance, clock: ContinuousClock())
         throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
-    }.value
+    }
 }
 
 private func _withThrowingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
     body: () async throws -> sending T,
     timeout: @Sendable @escaping () async throws -> Never
-) async throws -> Transferring<T> {
+) async throws -> sending T {
     try await withoutActuallyEscaping(body) { escapingBody in
         let bodyTask = Task {
             defer { _ = isolation }
@@ -106,7 +106,7 @@ private func _withThrowingTimeout<T>(
         } else {
             return try bodyResult.get()
         }
-    }
+    }.value
 }
 
 private struct Transferring<Value>: Sendable {
