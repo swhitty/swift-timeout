@@ -53,7 +53,7 @@ struct WithThrowingTimeoutTests {
             try await withThrowingTimeout(seconds: 0.05) {
                 MainActor.safeAssertIsolated()
                 defer { MainActor.safeAssertIsolated() }
-                try await Task.sleep(nanoseconds: 60_000_000_000)
+                try await Task.sleepIndefinitely()
             }
         }
     }

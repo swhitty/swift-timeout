@@ -109,13 +109,8 @@ private func _withThrowingTimeout<T>(
     }
 }
 
-private struct Transferring<Value>: Sendable {
-    nonisolated(unsafe) public var value: Value
-    init(_ value: Value) {
-        self.value = value
-    }
-}
 #else
+
 public func withThrowingTimeout<T>(
     seconds: TimeInterval,
     body: () async throws -> T
@@ -178,10 +173,4 @@ private func _withThrowingTimeout<T: Sendable>(
     }
 }
 
-private struct Transferring<Value>: @unchecked Sendable {
-    var value: Value
-    init(_ value: Value) {
-        self.value = value
-    }
-}
 #endif
