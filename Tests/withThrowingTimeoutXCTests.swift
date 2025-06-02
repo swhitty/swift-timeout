@@ -1,5 +1,5 @@
 //
-//  TimeoutTests.swift
+//  withThrowingXCTimeout.swift
 //  swift-timeout
 //
 //  Created by Simon Whitty on 31/08/2024.
@@ -33,7 +33,7 @@
 import Timeout
 import XCTest
 
-final class TimeoutTests: XCTestCase {
+final class WithThrowingTimeoutXCTests: XCTestCase {
 
     @MainActor
     func testMainActor_ReturnsValue() async throws {

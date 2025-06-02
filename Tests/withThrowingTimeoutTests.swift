@@ -1,5 +1,5 @@
 //
-//  TimeoutTests.swift
+//  withThrowingTimeoutTests.swift
 //  swift-timeout
 //
 //  Created by Simon Whitty on 31/08/2024.
@@ -34,7 +34,7 @@ import Timeout
 import Foundation
 import Testing
 
-struct TimeoutTests {
+struct WithThrowingTimeoutTests {
 
     @Test @MainActor
     func mainActor_ReturnsValue() async throws {

@@ -1,5 +1,5 @@
 //
-//  Timeout.swift
+//  withThrowingTimeout.swift
 //  swift-timeout
 //
 //  Created by Simon Whitty on 31/08/2024.
