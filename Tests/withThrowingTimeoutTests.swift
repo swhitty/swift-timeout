@@ -30,7 +30,7 @@
 //
 
 #if canImport(Testing)
-import Timeout
+@testable import Timeout
 import Foundation
 import Testing
 
@@ -136,6 +136,46 @@ struct WithThrowingTimeoutTests {
                 try await Task.sleep(for: .seconds(2))
             }
         }
+    }
+
+    @Test
+    func timeout_ExpiresImmediatley() async throws {
+        await #expect(throws: TimeoutError.self) {
+            try await withThrowingTimeout(seconds: 1_000) { timeout in
+                timeout.expireImmediatley()
+            }
+        }
+    }
+
+    @Test
+    func timeout_ExpiresAfterSeconds() async throws {
+        await #expect(throws: TimeoutError.self) {
+            try await withThrowingTimeout(seconds: 1_000) { timeout in
+                timeout.expireAfter(seconds: 0.1)
+                try await Task.sleepIndefinitely()
+            }
+        }
+    }
+
+    @Test
+    func timeout_ExpiresAfterDeadline() async throws {
+        await #expect(throws: TimeoutError.self) {
+            try await withThrowingTimeout(seconds: 1_000) { timeout in
+                timeout.expire(after: .now + .seconds(0.1))
+                try await Task.sleepIndefinitely()
+            }
+        }
+    }
+
+    @Test
+    func timeout_ExpirationCancels() async throws {
+        #expect(
+            try await withThrowingTimeout(seconds: 0.1) { timeout in
+                timeout.cancelExpiration()
+                try await Task.sleep(for: .seconds(0.3))
+                return "Fish"
+            } == "Fish"
+        )
     }
 }
 
