@@ -1,5 +1,5 @@
 //
-//  MutexTests.swift
+//  MutexXCTests.swift
 //  swift-mutex
 //
 //  Created by Simon Whitty on 07/09/2024.
@@ -29,47 +29,44 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
+#if !canImport(Testing)
 @testable import Timeout
-import Testing
+import XCTest
 
-struct MutexTests {
+final class MutexXCTests: XCTestCase {
 
-    @Test
-    func withLock_ReturnsValue() {
+    func testWithLock_ReturnsValue() {
         let mutex = Mutex("fish")
         let val = mutex.withLock {
             $0 + " & chips"
         }
-        #expect(val == "fish & chips")
+        XCTAssertEqual(val, "fish & chips")
     }
 
-    @Test
-    func withLock_ThrowsError() {
+    func testWithLock_ThrowsError() {
         let mutex = Mutex("fish")
-        #expect(throws: CancellationError.self) {
-            try mutex.withLock { _ -> Void in throw CancellationError() }
+        XCTAssertThrowsError(try mutex.withLock { _ -> Void in throw CancellationError() }) {
+            _ = $0 is CancellationError
         }
     }
 
-    @Test
-    func lockIfAvailable_ReturnsValue() {
+    func testLockIfAvailable_ReturnsValue() {
         let mutex = Mutex("fish")
         mutex.unsafeLock()
-        #expect(
-            mutex.withLockIfAvailable { _ in "chips" } == nil
+        XCTAssertNil(
+            mutex.withLockIfAvailable { _ in "chips" }
         )
         mutex.unsafeUnlock()
-        #expect(
-            mutex.withLockIfAvailable { _ in "chips" } == "chips"
+        XCTAssertEqual(
+            mutex.withLockIfAvailable { _ in "chips" },
+            "chips"
         )
     }
 
-    @Test
-    func withLockIfAvailable_ThrowsError() {
+    func testWithLockIfAvailable_ThrowsError() {
         let mutex = Mutex("fish")
-        #expect(throws: CancellationError.self) {
-            try mutex.withLockIfAvailable { _ -> Void in throw CancellationError() }
+        XCTAssertThrowsError(try mutex.withLockIfAvailable { _ -> Void in throw CancellationError() }) {
+            _ = $0 is CancellationError
         }
     }
 }
