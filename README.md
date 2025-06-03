@@ -40,6 +40,26 @@ let val = try await withThrowingTimeout(seconds: 2.0) {
 
 > Note: When the timeout expires the task executing the closure is cancelled and `TimeoutError` is thrown.
 
+An overload includes the `Timeout` object that allows the body to cancel or move the expiration if required:
+
+```swift
+try await withThrowingTimeout(seconds: 1.0) { timeout in
+  try await foo()
+  timeout.cancelExpiration()
+  try await bar()
+  timeout.expire(afer: 0.5)
+  try await baz()
+}
+```
+
+`AsyncTimeoutSequence` allows each iteration a fresh timeout to return the next element;
+
+```swift
+for try await val in sequence.timeout(seconds: 2.0) {
+   ...
+}
+```
+
 # Credits
 
 Timeout is primarily the work of [Simon Whitty](https://github.com/swhitty).
