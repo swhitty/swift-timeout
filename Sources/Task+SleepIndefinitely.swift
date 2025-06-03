@@ -29,8 +29,6 @@
 //  SOFTWARE.
 //
 
-#if compiler(>=6)
-
 package extension Task<Never, Never> {
 
     private typealias State = (isCancelled: Bool, continuation: CheckedContinuation<Void, any Error>?)
@@ -61,5 +59,3 @@ package extension Task<Never, Never> {
         fatalError("can never occur")
     }
 }
-
-#endif
