@@ -37,7 +37,7 @@ public struct Timeout: Sendable {
     fileprivate let shared: SharedState
 
     @discardableResult
-    public func expireAfter(seconds: TimeInterval) -> Bool {
+    public func expire(seconds: TimeInterval) -> Bool {
         enqueue {
             try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             throw TimeoutError("Task timed out before completion. Timeout: \(seconds) seconds.")

@@ -151,7 +151,7 @@ struct WithThrowingTimeoutTests {
     func timeout_ExpiresAfterSeconds() async throws {
         await #expect(throws: TimeoutError.self) {
             try await withThrowingTimeout(seconds: 1_000) { timeout in
-                timeout.expireAfter(seconds: 0.1)
+                timeout.expire(seconds: 0.1)
                 try await Task.sleepIndefinitely()
             }
         }
