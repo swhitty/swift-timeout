@@ -33,11 +33,11 @@
 
 package extension Task<Never, Never> {
 
-    private typealias State = (isCancelled: Bool, continuation: CheckedContinuation<Never, any Error>?)
+    private typealias State = (isCancelled: Bool, continuation: CheckedContinuation<Void, any Error>?)
 
     static func sleepIndefinitely() async throws -> Never {
         let state = Mutex<State>((isCancelled: false, continuation: nil))
-        return try await withTaskCancellationHandler {
+        try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 let isCancelled = state.withLock {
                     if $0.isCancelled {
@@ -58,6 +58,7 @@ package extension Task<Never, Never> {
             }
             continuation?.resume(throwing: _Concurrency.CancellationError())
         }
+        fatalError("can never occur")
     }
 }
 
