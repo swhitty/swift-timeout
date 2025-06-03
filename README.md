@@ -15,7 +15,7 @@ Timeout can be installed by using Swift Package Manager.
 To install using Swift Package Manager, add this to the `dependencies:` section in your Package.swift file:
 
 ```swift
-.package(url: "https://github.com/swhitty/swift-timeout.git", .upToNextMajor(from: "0.2.0"))
+.package(url: "https://github.com/swhitty/swift-timeout.git", .upToNextMajor(from: "0.3.0"))
 ```
 
 # Usage
@@ -40,7 +40,7 @@ let val = try await withThrowingTimeout(seconds: 2.0) {
 
 > Note: When the timeout expires the task executing the closure is cancelled and `TimeoutError` is thrown.
 
-An overload includes the `Timeout` object that allows the body to cancel or move the expiration if required:
+An overload includes a `Timeout` object allowing the body to cancel or move the expiration where required:
 
 ```swift
 try await withThrowingTimeout(seconds: 1.0) { timeout in
@@ -62,6 +62,6 @@ for try await val in sequence.timeout(seconds: 2.0) {
 
 # Credits
 
-Timeout is primarily the work of [Simon Whitty](https://github.com/swhitty).
+**swift-timeout** is primarily the work of [Simon Whitty](https://github.com/swhitty).
 
 ([Full list of contributors](https://github.com/swhitty/swift-timeout/graphs/contributors))
