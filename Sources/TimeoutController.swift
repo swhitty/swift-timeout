@@ -1,5 +1,5 @@
 //
-//  Timeout.swift
+//  TimeoutController.swift
 //  swift-timeout
 //
 //  Created by Simon Whitty on 02/06/2025.
