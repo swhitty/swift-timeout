@@ -54,7 +54,7 @@ public func withThrowingTimeout<T>(
 public func withThrowingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
     seconds: TimeInterval,
-    body: (Timeout) async throws -> sending T
+    body: (TimeoutController) async throws -> sending T
 ) async throws -> sending T {
     try await _withThrowingTimeout(isolation: isolation, body: body) {
         try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
@@ -91,7 +91,7 @@ public func withThrowingTimeout<T>(
 
 private func _withThrowingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
-    body: (Timeout) async throws -> sending T,
+    body: (TimeoutController) async throws -> sending T,
     timeout closure: @Sendable @escaping () async throws -> Never
 ) async throws -> Transferring<T> {
     try await withoutActuallyEscaping(body) { escapingBody in
