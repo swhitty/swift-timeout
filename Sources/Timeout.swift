@@ -32,7 +32,10 @@
 #if compiler(>=6.0)
 import Foundation
 
-public struct Timeout: Sendable {
+@available(*, unavailable, renamed: "TimeoutController")
+public typealias Timeout = TimeoutController
+
+public struct TimeoutController: Sendable {
     fileprivate var canary: @Sendable () -> Void
     fileprivate let shared: SharedState
 
@@ -74,7 +77,7 @@ public struct Timeout: Sendable {
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-public extension Timeout {
+public extension TimeoutController {
 
     @discardableResult
     func expire<C: Clock>(
@@ -97,7 +100,7 @@ public extension Timeout {
     }
 }
 
-extension Timeout {
+extension TimeoutController {
 
     init(
         canary: @escaping @Sendable () -> Void,
@@ -156,13 +159,13 @@ extension Timeout {
 func withNonEscapingTimeout<T>(
     _ timeout: @escaping @Sendable () async throws -> Never,
     isolation: isolated (any Actor)? = #isolation,
-    body: (Timeout) async throws -> sending T
+    body: (TimeoutController) async throws -> sending T
 ) async throws -> sending T {
     // canary ensuring Timeout does not escape at runtime.
     // Swift 6.2 and later enforce at compile time with ~Escapable
     try await withoutActuallyEscaping({ @Sendable in }) { escaping in
         _ = isolation
-        let timeout = Timeout(canary: escaping, pending: timeout)
+        let timeout = TimeoutController(canary: escaping, pending: timeout)
         return try await Transferring(body(timeout))
     }.value
 }

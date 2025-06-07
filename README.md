@@ -40,7 +40,7 @@ let val = try await withThrowingTimeout(seconds: 2.0) {
 
 > Note: When the timeout expires the task executing the closure is cancelled and `TimeoutError` is thrown.
 
-An overload includes a `Timeout` object allowing the body to cancel or move the expiration where required:
+An overload includes a `TimeoutController` object allowing the body to cancel or move the expiration where required:
 
 ```swift
 try await withThrowingTimeout(seconds: 1.0) { timeout in
