@@ -29,7 +29,7 @@
 //  SOFTWARE.
 //
 
-import Foundation
+import struct Foundation.TimeInterval
 
 public extension AsyncSequence where Element: Sendable {
 

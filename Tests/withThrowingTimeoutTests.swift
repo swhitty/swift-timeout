@@ -31,7 +31,7 @@
 
 #if canImport(Testing)
 @testable import Timeout
-import Foundation
+import struct Foundation.TimeInterval
 import Testing
 
 struct WithThrowingTimeoutTests {

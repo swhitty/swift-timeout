@@ -30,7 +30,7 @@
 //
 
 #if compiler(>=6.0)
-import Foundation
+import struct Foundation.TimeInterval
 
 public struct TimeoutController: Sendable {
     fileprivate var canary: @Sendable () -> Void

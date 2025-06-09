@@ -29,7 +29,8 @@
 //  SOFTWARE.
 //
 
-import Foundation
+import protocol Foundation.LocalizedError
+import struct Foundation.TimeInterval
 
 public struct TimeoutError: LocalizedError {
     public var errorDescription: String?
