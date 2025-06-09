@@ -32,9 +32,6 @@
 #if compiler(>=6.0)
 import Foundation
 
-@available(*, unavailable, renamed: "TimeoutController")
-public typealias Timeout = TimeoutController
-
 public struct TimeoutController: Sendable {
     fileprivate var canary: @Sendable () -> Void
     fileprivate let shared: SharedState
