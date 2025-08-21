@@ -158,8 +158,8 @@ func withNonEscapingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
     body: (TimeoutController) async throws -> sending T
 ) async throws -> sending T {
-    // canary ensuring Timeout does not escape at runtime.
-    // Swift 6.2 and later enforce at compile time with ~Escapable
+    // canary ensuring TimeoutController does not escape at runtime.
+    // Swift 6.2 and later can enforce at compile time with ~Escapable
     try await withoutActuallyEscaping({ @Sendable in }) { escaping in
         _ = isolation
         let timeout = TimeoutController(canary: escaping, pending: timeout)
