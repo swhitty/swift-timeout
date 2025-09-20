@@ -29,7 +29,6 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
 @testable import Timeout
 import struct Foundation.TimeInterval
 import Testing
@@ -64,5 +63,3 @@ struct TaskSleepIndefinitelyTests {
         }
     }
 }
-
-#endif

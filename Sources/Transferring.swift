@@ -29,18 +29,10 @@
 //  SOFTWARE.
 //
 
-#if compiler(>=6.0)
 struct Transferring<Value>: Sendable {
     nonisolated(unsafe) public var value: Value
     init(_ value: Value) {
         self.value = value
     }
 }
-#else
-struct Transferring<Value>: @unchecked Sendable {
-    var value: Value
-    init(_ value: Value) {
-        self.value = value
-    }
-}
-#endif
+

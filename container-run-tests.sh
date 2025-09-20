@@ -2,8 +2,8 @@
 
 set -eu
 
-docker run -it \
+container run -it \
   --rm \
   --mount src="$(pwd)",target=/package,type=bind \
-  swift:6.1.2-jammy \
+  swift:6.2 \
   /usr/bin/swift test --package-path /package

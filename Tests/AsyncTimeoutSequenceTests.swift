@@ -29,7 +29,6 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
 @testable import Timeout
 import Testing
 
@@ -73,4 +72,3 @@ struct AsyncTimeoutSequenceTests {
         }
     }
 }
-#endif

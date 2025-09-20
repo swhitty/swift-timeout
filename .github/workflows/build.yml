@@ -55,33 +55,6 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  xcode_15_4:
-    runs-on: macos-14
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Version
-        run: swift --version
-      - name: Build
-        run: swift build --build-tests
-      - name: Test
-        run: swift test --skip-build
-
-  linux_swift_5_10:
-    runs-on: ubuntu-latest
-    container: swift:5.10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Version
-        run: swift --version
-      - name: Build
-        run: swift build --build-tests
-      - name: Test
-        run: swift test --skip-build
-
   linux_swift_6_0:
     runs-on: ubuntu-latest
     container: swift:6.0.3
@@ -151,7 +124,7 @@ jobs:
       - name: Build
         run: swift build --swift-sdk aarch64-unknown-linux-android24
 
-  windows_swift_6_1:
+  windows_swift_6_2:
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -159,8 +132,7 @@ jobs:
       - name: Install Swift
         uses: SwiftyLab/setup-swift@latest
         with:
-          swift-version: "6.1.2"
-          visual-studio-components: Microsoft.VisualStudio.Component.Windows11SDK.22621
+          swift-version: "6.2"
       - name: Version
         run: swift --version
       - name: Build

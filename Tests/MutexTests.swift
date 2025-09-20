@@ -29,7 +29,7 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
+#if canImport(Darwin)
 @testable import Timeout
 import Testing
 

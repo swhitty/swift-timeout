@@ -29,7 +29,6 @@
 //  SOFTWARE.
 //
 
-#if canImport(Testing)
 @testable import Timeout
 import struct Foundation.TimeInterval
 import Testing
@@ -39,9 +38,9 @@ struct WithThrowingTimeoutTests {
     @Test @MainActor
     func mainActor_ReturnsValue() async throws {
         let val = try await withThrowingTimeout(seconds: 1) {
-            MainActor.safeAssertIsolated()
+            MainActor.assertIsolated()
             try await Task.sleep(nanoseconds: 1_000)
-            MainActor.safeAssertIsolated()
+            MainActor.assertIsolated()
             return "Fish"
         }
         #expect(val == "Fish")
@@ -51,8 +50,8 @@ struct WithThrowingTimeoutTests {
     func mainActorThrowsError_WhenTimeoutExpires() async {
         await #expect(throws: TimeoutError.self) { @MainActor in
             try await withThrowingTimeout(seconds: 0.05) {
-                MainActor.safeAssertIsolated()
-                defer { MainActor.safeAssertIsolated() }
+                MainActor.assertIsolated()
+                defer { MainActor.assertIsolated() }
                 try await Task.sleepIndefinitely()
             }
         }
@@ -202,9 +201,7 @@ final actor TestActor<T: Sendable> {
     func returningValue(after sleep: TimeInterval = 0, timeout: TimeInterval = 1) async throws -> T {
         try await withThrowingTimeout(seconds: timeout) {
             try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
-            #if compiler(>=5.10)
             self.assertIsolated()
-            #endif
             return self.value
         }
     }
@@ -212,23 +209,8 @@ final actor TestActor<T: Sendable> {
     func returningValue(after sleep: TimeInterval = 0, before instant: ContinuousClock.Instant) async throws -> T {
         try await withThrowingTimeout(after: instant) {
             try await Task.sleep(nanoseconds: UInt64(sleep * 1_000_000_000))
-            #if compiler(>=5.10)
             self.assertIsolated()
-            #endif
             return self.value
         }
     }
 }
-
-extension MainActor {
-
-    static func safeAssertIsolated() {
-    #if compiler(>=5.10)
-        assertIsolated()
-    #else
-        precondition(Thread.isMainThread)
-    #endif
-    }
-}
-
-#endif

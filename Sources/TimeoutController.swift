@@ -29,7 +29,11 @@
 //  SOFTWARE.
 //
 
-#if compiler(>=6.0)
+#if !canImport(Darwin)
+import Synchronization
+typealias Mutex = Synchronization.Mutex
+#endif
+
 import struct Foundation.TimeInterval
 
 public struct TimeoutController: Sendable {
@@ -166,5 +170,3 @@ func withNonEscapingTimeout<T>(
         return try await Transferring(body(timeout))
     }.value
 }
-
-#endif
