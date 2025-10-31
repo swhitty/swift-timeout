@@ -47,7 +47,7 @@ try await withThrowingTimeout(seconds: 1.0) { timeout in
   try await foo()
   timeout.cancelExpiration()
   try await bar()
-  timeout.expire(afer: 0.5)
+  timeout.expire(after: .now + .seconds(0.5))
   try await baz()
 }
 ```
