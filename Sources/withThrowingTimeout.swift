@@ -40,6 +40,88 @@ public struct TimeoutError: LocalizedError {
     }
 }
 
+#if compiler(>=6.2)
+
+nonisolated(nonsending) public func withThrowingTimeout<T>(
+    seconds: TimeInterval,
+    body: () async throws -> T
+) async throws -> T {
+    try await _withThrowingTimeout(body: { _ in try await body() }) {
+        try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+        throw TimeoutError("Task timed out before completion. Timeout: \(seconds) seconds.")
+    }.value
+}
+
+nonisolated(nonsending) public func withThrowingTimeout<T>(
+    seconds: TimeInterval,
+    body: (TimeoutController) async throws -> T
+) async throws -> T {
+    try await _withThrowingTimeout(body: body) {
+        try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+        throw TimeoutError("Task timed out before completion. Timeout: \(seconds) seconds.")
+    }.value
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+nonisolated(nonsending) public func withThrowingTimeout<T, C: Clock>(
+    after instant: C.Instant,
+    tolerance: C.Instant.Duration? = nil,
+    clock: C,
+    body: () async throws -> sending T
+) async throws -> sending T {
+    try await _withThrowingTimeout(body: { _ in try await body() }) {
+        try await Task.sleep(until: instant, tolerance: tolerance, clock: clock)
+        throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
+    }.value
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+nonisolated(nonsending) public func withThrowingTimeout<T>(
+    after instant: ContinuousClock.Instant,
+    tolerance: ContinuousClock.Instant.Duration? = nil,
+    body: () async throws -> sending T
+) async throws -> sending T {
+    try await _withThrowingTimeout(body: { _ in try await body() }) {
+        try await Task.sleep(until: instant, tolerance: tolerance, clock: ContinuousClock())
+        throw TimeoutError("Task timed out before completion. Deadline: \(instant).")
+    }.value
+}
+
+private func _withThrowingTimeout<T>(
+    isolation: isolated (any Actor)? = #isolation,
+    body: (TimeoutController) async throws -> T,
+    timeout closure: @Sendable @escaping () async throws -> Never
+) async throws -> Transferring<T> {
+    try await withoutActuallyEscaping(body) { escapingBody in
+        try await withNonEscapingTimeout(closure) { timeout in
+            let bodyTask = Task {
+                defer { _ = isolation }
+                return try await Transferring(escapingBody(timeout))
+            }
+            let timeoutTask = Task {
+                defer { bodyTask.cancel() }
+                try await timeout.waitForTimeout()
+            }
+
+            let bodyResult = await withTaskCancellationHandler {
+                await bodyTask.result
+            } onCancel: {
+                bodyTask.cancel()
+            }
+            timeoutTask.cancel()
+
+            if case .failure(let timeoutError) = await timeoutTask.result,
+               timeoutError is TimeoutError {
+                throw timeoutError
+            } else {
+                return try bodyResult.get()
+            }
+        }
+    }
+}
+
+#else
+
 public func withThrowingTimeout<T>(
     isolation: isolated (any Actor)? = #isolation,
     seconds: TimeInterval,
@@ -121,3 +203,5 @@ private func _withThrowingTimeout<T>(
         }
     }
 }
+
+#endif
