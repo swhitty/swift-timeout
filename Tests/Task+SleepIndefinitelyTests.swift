@@ -51,7 +51,7 @@ struct TaskSleepIndefinitelyTests {
 
     @Test
     func throwsWhenCancelled() async {
-        let task = Task {
+        let task = Task<Void, any Error> {
             try await Task.sleepIndefinitely()
         }
 
