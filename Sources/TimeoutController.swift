@@ -63,7 +63,7 @@ public struct TimeoutController: Sendable {
     }
 
     struct State {
-        var running: Task<Never, any Error>?
+        var running: Task<Void, any Error>?
         var pending: (@Sendable () async throws -> Never)?
         var isComplete: Bool = false
     }
@@ -122,13 +122,13 @@ extension TimeoutController {
         }
     }
 
-    func startPendingTask() -> Task<Never, any Error>? {
+    func startPendingTask() -> Task<Void, any Error>? {
         return shared.state.withLock { s in
             guard let pending = s.pending else {
                 s.isComplete = true
                 return nil
             }
-            let task = Task { try await pending() }
+            let task = Task { _ = try await pending() }
             s.pending = nil
             s.running = task
             return task
