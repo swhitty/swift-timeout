@@ -40,10 +40,13 @@ public extension AsyncSequence where Element: Sendable {
     }
 
     /// Creates an asynchronous sequence that throws error if any iteration
-    /// takes longer than provided `Duration`.
+    /// takes longer than provided `Duration` using the supplied `Clock`.
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    func timeout(duration: Duration) -> AsyncTimeoutSequence<Self> {
-        AsyncTimeoutSequence(base: self, duration: duration)
+    func timeout<C: Clock>(
+        duration: Duration,
+        clock: C = ContinuousClock()
+    ) -> AsyncTimeoutSequence<Self> where C.Duration == Duration {
+        AsyncTimeoutSequence(base: self, duration: duration, clock: clock)
     }
 }
 
@@ -51,7 +54,7 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
     public typealias Element = Base.Element
 
     private let base: Base
-    private let interval: TimeoutInterval
+    private let interval: TimeoutInterval<Base.Element?>
 
     public init(base: Base, seconds: TimeInterval) {
         self.base = base
@@ -59,9 +62,13 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
     }
 
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public init(base: Base, duration: Duration) {
+    public init<C: Clock>(
+        base: Base,
+        duration: Duration,
+        clock: C = ContinuousClock()
+    ) where C.Duration == Duration {
         self.base = base
-        self.interval = .duration(.init(duration))
+        self.interval = .duration(.init(duration, clock: clock))
     }
 
     public func makeAsyncIterator() -> AsyncIterator {
@@ -73,9 +80,9 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
 
     public struct AsyncIterator: AsyncIteratorProtocol {
         private var iterator: Base.AsyncIterator
-        private let interval: TimeoutInterval
+        private let interval: TimeoutInterval<Base.Element?>
 
-        init(iterator: Base.AsyncIterator, interval: TimeoutInterval) {
+        fileprivate init(iterator: Base.AsyncIterator, interval: TimeoutInterval<Base.Element?>) {
             self.iterator = iterator
             self.interval = interval
         }
@@ -91,7 +98,7 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
                 guard #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) else {
                     fatalError("cannot occur")
                 }
-                return try await withThrowingTimeout(after: .now + durationBox.value) {
+                return try await durationBox.withThrowingTimeout {
                     try await self.iterator.next()
                 }
             }
@@ -99,21 +106,37 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
     }
 }
 
-enum TimeoutInterval {
+private enum TimeoutInterval<T: Sendable> {
     case timeInterval(TimeInterval)
     case duration(DurationBox)
 
     struct DurationBox {
-        private let storage: Any
+        private typealias TimeoutClosure = (() async throws -> sending T) async throws -> sending T
+
+        private let storage: TimeoutClosure
 
         @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-        var value: Duration {
-            storage as! Duration
+        init<C: Clock>(
+            _ duration: C.Duration,
+            clock: C
+        ) {
+            self.storage = { closure in
+                try await Timeout.withThrowingTimeout(
+                    after: clock.now.advanced(by: duration),
+                    clock: clock
+                ) {
+                    try await closure()
+                }
+            }
         }
 
         @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-        init(_ duration: Duration) {
-            self.storage = duration
+        func withThrowingTimeout(
+            _ closure: () async throws -> sending T
+        ) async throws -> T {
+            try await storage {
+                try await closure()
+            }
         }
     }
 }
