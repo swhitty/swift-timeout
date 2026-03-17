@@ -43,10 +43,16 @@ public extension AsyncSequence where Element: Sendable {
     /// takes longer than provided `Duration` using the supplied `Clock`.
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
     func timeout<C: Clock>(
-        duration: Duration,
+        duration: C.Duration,
+        tolerance: C.Instant.Duration? = nil,
         clock: C = ContinuousClock()
-    ) -> AsyncTimeoutSequence<Self> where C.Duration == Duration {
-        AsyncTimeoutSequence(base: self, duration: duration, clock: clock)
+    ) -> AsyncTimeoutSequence<Self> {
+        AsyncTimeoutSequence(
+            base: self,
+            duration: duration,
+            tolerance: tolerance,
+            clock: clock
+        )
     }
 }
 
@@ -64,11 +70,12 @@ public struct AsyncTimeoutSequence<Base: AsyncSequence>: AsyncSequence where Bas
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
     public init<C: Clock>(
         base: Base,
-        duration: Duration,
+        duration: C.Duration,
+        tolerance: C.Instant.Duration? = nil,
         clock: C = ContinuousClock()
-    ) where C.Duration == Duration {
+    ) {
         self.base = base
-        self.interval = .duration(.init(duration, clock: clock))
+        self.interval = .duration(.init(duration: duration, tolerance: tolerance, clock: clock))
     }
 
     public func makeAsyncIterator() -> AsyncIterator {
@@ -117,12 +124,14 @@ private enum TimeoutInterval<T: Sendable> {
 
         @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
         init<C: Clock>(
-            _ duration: C.Duration,
+            duration: C.Duration,
+            tolerance: C.Instant.Duration? = nil,
             clock: C
         ) {
             self.storage = { closure in
                 try await Timeout.withThrowingTimeout(
                     after: clock.now.advanced(by: duration),
+                    tolerance: tolerance,
                     clock: clock
                 ) {
                     try await closure()

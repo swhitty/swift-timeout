@@ -83,7 +83,11 @@ struct AsyncTimeoutSequenceTests {
         }
         defer { t.cancel() }
         var iterator = stream
-            .timeout(duration: .milliseconds(100), clock: SuspendingClock())
+            .timeout(
+                duration: .milliseconds(100),
+                tolerance: .zero,
+                clock: SuspendingClock()
+            )
             .makeAsyncIterator()
 
         #expect(try await iterator.next() == 1)
