@@ -71,4 +71,29 @@ struct AsyncTimeoutSequenceTests {
             try await iterator.next()
         }
     }
+
+    @Test
+    func timeoutDurationWithSuspendingClock() async throws {
+        let (stream, continuation) = AsyncStream<Int>.makeStream()
+        let t = Task {
+            continuation.yield(1)
+            try await Task.sleep(nanoseconds: 1_000)
+            continuation.yield(2)
+            try await Task.sleepIndefinitely()
+        }
+        defer { t.cancel() }
+        var iterator = stream
+            .timeout(
+                duration: .milliseconds(100),
+                tolerance: .zero,
+                clock: SuspendingClock()
+            )
+            .makeAsyncIterator()
+
+        #expect(try await iterator.next() == 1)
+        #expect(try await iterator.next() == 2)
+        await #expect(throws: TimeoutError.self) {
+            try await iterator.next()
+        }
+    }
 }
